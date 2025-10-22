@@ -1,6 +1,7 @@
 ## Screen Recording of User Journey
 
 Under the file 15c287a0-c42b-45c1-9c29-7eee74f3cd58.mp4
+(Won't show up in Github-- may just have to download it)
 
 ## User Journey
 
