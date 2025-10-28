@@ -52,6 +52,17 @@ const ficDateYear = ref(2023);
 const ficSubmitError = ref<string | null>(null);
 const userVersions = ref<Version[]>([]);
 
+// State for submitting new version of existing fic - track per version
+const showNewVersionForm = ref<Record<string, boolean>>({});
+const newVersionForms = ref<Record<string, {
+  text: string;
+  tags: string;
+  dateDay: number;
+  dateMonth: number;
+  dateYear: number;
+  error: string | null;
+}>>({});
+
 // Combined state for the currently selected fic and its categorization
 const selectedFicDetails = ref<{
   fic: Fic;
@@ -126,6 +137,135 @@ const handleSubmitFic = async () => {
   fetchUserVersions(); // Refresh the list of fics
 };
 
+const toggleNewVersionForm = (versionTitle: string) => {
+  showNewVersionForm.value[versionTitle] = !showNewVersionForm.value[versionTitle];
+
+  // Initialize form data if it doesn't exist
+  if (!newVersionForms.value[versionTitle]) {
+    newVersionForms.value[versionTitle] = {
+      text: '',
+      tags: '',
+      dateDay: 1,
+      dateMonth: 1,
+      dateYear: 2023,
+      error: null,
+    };
+  }
+};
+
+const handleSubmitNewVersion = async (versionTitle: string) => {
+  const form = newVersionForms.value[versionTitle];
+  if (!form) return;
+
+  form.error = null;
+  if (!authStore.userId) {
+    form.error = 'Please log in to submit a new version.';
+    return;
+  }
+
+  const date = {
+    day: form.dateDay,
+    month: form.dateMonth,
+    year: form.dateYear,
+  };
+
+  const authorTagsFormatted = form.tags.split(',').map((tag: string) => tag.trim()).join('\n');
+
+  // Submit new version of existing fanfic
+  const submitResult = await LibraryAPI.submitNewVersionOfFanfic(
+    authStore.userId,
+    form.text,
+    authorTagsFormatted,
+    versionTitle,
+    date,
+    versionTitle, // ficName is the same as versionTitle
+  );
+
+  if ('error' in submitResult) {
+    form.error = submitResult.error;
+    return;
+  }
+
+  alert(`New version submitted! Version ID: ${submitResult.versionId}`);
+
+  // Automatically trigger categorization for the new version
+  // We need to get the fic ID from the version to categorize it
+  const versionResult = await LibraryAPI.getVersion(authStore.userId, versionTitle);
+  if (!('error' in versionResult)) {
+    const version = versionResult[0].version;
+    const latestFic = version.fics[version.fics.length - 1]; // Get the latest fic
+    if (latestFic) {
+      const categorizeResult = await CategorizingAPI.categorizeFic(
+        latestFic._id,
+        form.text,
+        authorTagsFormatted,
+      );
+      if ('error' in categorizeResult) {
+        console.error('Error during automatic categorization:', categorizeResult.error);
+      }
+    }
+  }
+
+  // Reset form and refresh list
+  form.text = '';
+  form.tags = '';
+  form.dateDay = 1;
+  form.dateMonth = 1;
+  form.dateYear = 2023;
+  form.error = null;
+  showNewVersionForm.value[versionTitle] = false;
+  fetchUserVersions();
+};
+
+const deleteFic = async (ficTitle: string, versionNumber: number) => {
+  if (!authStore.userId) return;
+
+  if (!confirm(`Are you sure you want to delete version #${versionNumber} of "${ficTitle}"?`)) {
+    return;
+  }
+
+  const result = await LibraryAPI.deleteFic(authStore.userId, ficTitle, versionNumber);
+  if ('error' in result) {
+    alert('Error deleting fic: ' + result.error);
+  } else {
+    alert('Fic deleted successfully!');
+    // Also delete the categorization data
+    await CategorizingAPI.deleteFicCategory(result.ficId);
+    fetchUserVersions();
+    if (selectedFicDetails.value?.fic._id === result.ficId) {
+      selectedFicDetails.value = null;
+    }
+  }
+};
+
+const deleteVersion = async (ficTitle: string) => {
+  if (!authStore.userId) return;
+
+  if (!confirm(`Are you sure you want to delete ALL versions of "${ficTitle}"?`)) {
+    return;
+  }
+
+  // Get all fic IDs from this version to delete categorizations
+  const versionResult = await LibraryAPI.getVersion(authStore.userId, ficTitle);
+  let ficIds: ID[] = [];
+  if (!('error' in versionResult)) {
+    ficIds = versionResult[0].version.fics.map(fic => fic._id);
+  }
+
+  const result = await LibraryAPI.deleteVersion(authStore.userId, ficTitle);
+  if ('error' in result) {
+    alert('Error deleting version: ' + result.error);
+  } else {
+    alert('All versions deleted successfully!');
+    // Delete all categorizations for this version
+    if (ficIds.length > 0) {
+      await CategorizingAPI.deleteFicCategories(ficIds);
+    }
+    fetchUserVersions();
+    selectedFicDetails.value = null;
+  }
+};
+
 const viewFicDetails = async (ficId: ID, ficTitle: string, versionNumber: number) => {
   selectedFicDetails.value = null; // Clear previous details
   if (!authStore.userId) return;
@@ -172,8 +312,6 @@ watch(() => authStore.isAuthenticated, (newVal) => {
 
 <template>
   <main>
-    <h1>Welcome to the Concept App</h1>
-
     <div v-if="!authStore.isAuthenticated" class="auth-section">
       <section class="auth-form">
         <h2>Register</h2>
@@ -233,14 +371,79 @@ watch(() => authStore.isAuthenticated, (newVal) => {
         <p v-if="userVersions.length === 0">No fics submitted yet.</p>
         <ul v-else>
           <li v-for="version in userVersions" :key="version._id">
-            <h3>{{ version.title }}</h3>
+            <div class="version-header">
+              <h3>{{ version.title }}</h3>
+              <button @click="deleteVersion(version.title)" class="delete-btn">Delete All Versions</button>
+            </div>
             <p>Versions: ({{ version.fics.length }})</p>
             <ul>
               <li v-for="fic in version.fics" :key="fic._id">
-                Version #{{ fic.versionNumber }} ({{ fic.date.day }}/{{ fic.date.month }}/{{ fic.date.year }})
-                <button @click="viewFicDetails(fic._id, version.title, fic.versionNumber)">View Details</button>
+                <span>
+                  Version #{{ fic.versionNumber }} ({{ fic.date.day }}/{{ fic.date.month }}/{{ fic.date.year }})
+                </span>
+                <div class="action-buttons">
+                  <button @click="viewFicDetails(fic._id, version.title, fic.versionNumber)">View Details</button>
+                  <button @click="deleteFic(version.title, fic.versionNumber)" class="delete-btn">Delete</button>
+                </div>
               </li>
             </ul>
+
+            <!-- Submit New Version Form for this fic -->
+            <div class="new-version-section">
+              <button @click="toggleNewVersionForm(version.title)" class="toggle-btn">
+                {{ showNewVersionForm[version.title] ? '▼ Hide New Version Form' : '▶ Add New Version' }}
+              </button>
+
+              <form v-if="showNewVersionForm[version.title] && newVersionForms[version.title]"
+                    @submit.prevent="handleSubmitNewVersion(version.title)"
+                    class="new-version-form">
+                <label :for="'version-text-' + version._id">New Version Content:</label>
+                <textarea
+                  :id="'version-text-' + version._id"
+                  v-model="newVersionForms[version.title]!.text"
+                  rows="8"
+                  required
+                  placeholder="Write your new version here..."></textarea>
+
+                <label :for="'version-tags-' + version._id">Author Tags (comma-separated):</label>
+                <input
+                  :id="'version-tags-' + version._id"
+                  v-model="newVersionForms[version.title]!.tags"
+                  type="text"
+                  placeholder="fantasy, romance, magic" />
+
+                <fieldset>
+                  <legend>Publication Date:</legend>
+                  <label :for="'version-date-day-' + version._id">Day:</label>
+                  <input
+                    :id="'version-date-day-' + version._id"
+                    v-model.number="newVersionForms[version.title]!.dateDay"
+                    type="number"
+                    min="1"
+                    max="31"
+                    required />
+                  <label :for="'version-date-month-' + version._id">Month:</label>
+                  <input
+                    :id="'version-date-month-' + version._id"
+                    v-model.number="newVersionForms[version.title]!.dateMonth"
+                    type="number"
+                    min="1"
+                    max="12"
+                    required />
+                  <label :for="'version-date-year-' + version._id">Year:</label>
+                  <input
+                    :id="'version-date-year-' + version._id"
+                    v-model.number="newVersionForms[version.title]!.dateYear"
+                    type="number"
+                    min="1900"
+                    max="2100"
+                    required />
+                </fieldset>
+
+                <button type="submit">Submit New Version</button>
+                <p v-if="newVersionForms[version.title]?.error" class="error">{{ newVersionForms[version.title]!.error }}</p>
+              </form>
+            </div>
           </li>
         </ul>
 
@@ -280,13 +483,13 @@ watch(() => authStore.isAuthenticated, (newVal) => {
 </template>
 
 <style scoped>
+
 main {
-  max-width: 900px;
-  margin: 2rem auto;
+  width: 100%;
+  max-width: none;
   padding: 1rem;
-  background-color: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .warning {
@@ -305,12 +508,13 @@ h1, h2 {
 
 .auth-section {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   gap: 2rem;
   margin-bottom: 2rem;
+  padding-left: 310px;
 }
 
-.auth-form, .fic-submission, .user-library, .fic-details {
+.auth-form, .fic-details {
   flex: 1;
   padding: 1.5rem;
   border: 1px solid #eee;
@@ -412,9 +616,22 @@ button[type="submit"]:hover {
 }
 
 .authenticated-section {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+  min-width: 1165px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.fic-submission, .user-library {
+  flex: 1;
+  min-width: 0; /* Allows flex items to shrink below their content size */
+  padding: 1.5rem;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  background-color: #f9f9f9;
 }
 
 .user-library ul {
@@ -448,7 +665,72 @@ button[type="submit"]:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
+
+.version-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-buttons button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  background-color: #dc3545 !important;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c82333 !important;
+}
+
+.toggle-btn {
+  margin-bottom: 1rem;
+  padding: 0.6rem 1.2rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.toggle-btn:hover {
+  background-color: #5a6268;
+}
+
+.new-version-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid #d0d0d0;
+}
+
+.new-version-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f0f8ff;
+  border: 1px solid #a8d6ff;
+  border-radius: 6px;
+}
+
+.new-version-form label {
+  color: #333;
+}
+
+.new-version-form textarea,
+.new-version-form input {
+  background-color: white;
+}
+
 .fic-details {
   grid-column: span 2; /* Spans across both columns */
   background-color: #e9f7ef;
