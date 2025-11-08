@@ -9,6 +9,11 @@ import type { ID, FicCategoryDoc, DateSpec, Fic, Version } from './types';
 // Use environment variable or default to localhost:10000/api for development
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
 
+// Log the API base URL for debugging
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', import.meta.env.MODE);
+console.log('VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
