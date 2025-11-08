@@ -28,7 +28,7 @@ async function callApi<T, R>(
     }
     // For unexpected errors, return a generic error message
     console.error(`API Call Error (${conceptName}/${actionName}):`, error);
-    return { error: `An unexpected error occurred: ${String(error)}` };
+    return { error: `An unexpected error occurred: ${String(error)}, ${conceptName}/${actionName}` };
   }
 }
 
