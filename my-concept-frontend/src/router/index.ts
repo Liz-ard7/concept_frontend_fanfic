@@ -9,7 +9,13 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
-    // You can add more routes here
+    {
+      path: '/about',
+      name: 'about',
+      // Route level code-splitting - generates a separate chunk for this route
+      // which is lazy-loaded when the route is visited
+      component: () => import('../views/AboutView.vue')
+    }
   ]
 })
 

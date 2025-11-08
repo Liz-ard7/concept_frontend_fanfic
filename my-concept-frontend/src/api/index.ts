@@ -4,6 +4,7 @@ import type { ID, FicCategoryDoc, DateSpec, Fic, Version } from './types';
 // Base URL for your API backend
 // Use environment variable or default to '/api' for proxy in development
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// const API_BASE_URL = 'http://localhost:8000/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,6 +19,7 @@ async function callApi<T, R>(
   actionName: string,
   data: T,
 ): Promise<R | { error: string }> {
+  console.log(`API Call: ${conceptName}/${actionName} with data:`, data);
   try {
     const response = await apiClient.post(`/${conceptName}/${actionName}`, data);
     return response.data;
@@ -107,12 +109,12 @@ export const LibraryAPI = {
     return callApi('Library', 'deleteFicsAndUser', { user });
   },
 
-  async findFicWithDate(
-    user: ID,
-    date: DateSpec,
-  ): Promise<[{ fics: Fic[] }] | { error: string }> {
-    return callApi('Library', '_findFicWithDate', { user, date });
-  },
+  // async findFicWithDate(
+  //   user: ID,
+  //   date: DateSpec,
+  // ): Promise<[{ fics: Fic[] }] | { error: string }> {
+  //   return callApi('Library', '_findFicWithDate', { user, date });
+  // },
 
   async getVersion(
     user: ID,
