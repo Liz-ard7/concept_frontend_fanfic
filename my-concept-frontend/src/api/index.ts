@@ -4,10 +4,10 @@ import type { ID, FicCategoryDoc, DateSpec, Fic, Version } from './types';
 // Base URL for your API backend
 // Use environment variable or default to '/api' for proxy in development
 //const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-// const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 // const API_BASE_URL = 'http://localhost:10000/';
 // Use environment variable or default to localhost:10000/api for development
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:10000/api';
 
 // Log the API base URL for debugging
 console.log('API Base URL:', API_BASE_URL);
@@ -89,20 +89,8 @@ export const LibraryAPI = {
     ficName: string,
     versionNumber: number,
   ): Promise<{ fic: Fic } | { error: string }> {
-    // Query returns an array, but our spec says it returns { fic: Fic }, so we adapt.
-    // The API spec for queries returns an array, but the example given in the prompt for _viewFic returns { fic: Fic }.
-    // I will assume the API returns [{ fic: Fic }] for a single result query.
-    const result = await callApi<{ user: ID, ficName: string, versionNumber: number }, [{ fic: Fic }] | { error: string }>(
-      'Library',
-      '_viewFic',
-      { user, ficName, versionNumber },
-    );
-
-    if ('error' in result) {
-      return result;
-    }
-    // Assuming a single item array for single-result queries
-    return result[0];
+    // The sync now returns { fic: Fic } directly (not wrapped in an array)
+    return callApi('Library', '_viewFic', { user, ficName, versionNumber });
   },
 
   async deleteFic(
@@ -127,7 +115,7 @@ export const LibraryAPI = {
   async getVersion(
     user: ID,
     versionTitle: string,
-  ): Promise<[{ version: Version }] | { error: string }> {
+  ): Promise<{ version: Version } | { error: string }> {
     return callApi('Library', '_getVersion', { user, versionTitle });
   },
 
@@ -140,7 +128,7 @@ export const LibraryAPI = {
 
   async getAllUserVersions(
     user: ID,
-  ): Promise<[{ versions: Version[] }] | { error: string }> {
+  ): Promise<{ versions: Version[] } | { error: string }> {
     return callApi('Library', '_getAllUserVersions', { user });
   },
 };
@@ -157,8 +145,8 @@ export const CategorizingAPI = {
 
   async viewFicCategory(
     ficId: ID,
-  ): Promise<FicCategoryDoc[] | { error: string }> {
-    // Query returns an array of objects
+  ): Promise<{ ficCategory: FicCategoryDoc[] } | { error: string }> {
+    // The sync returns { ficCategory: FicCategoryDoc[] }
     return callApi('Categorizing', '_viewFicCategory', { ficId });
   },
 
@@ -172,8 +160,8 @@ export const CategorizingAPI = {
     return callApi('Categorizing', 'deleteFicCategories', { ficIds });
   },
 
-  async getAllFicCategories(): Promise<FicCategoryDoc[] | { error: string }> {
-    // Query returns an array of objects, and takes no arguments
+  async getAllFicCategories(): Promise<{ ficCategories: FicCategoryDoc[] } | { error: string }> {
+    // The sync returns { ficCategories: FicCategoryDoc[] }
     return callApi('Categorizing', '_getAllFicCategories', {});
   },
 };

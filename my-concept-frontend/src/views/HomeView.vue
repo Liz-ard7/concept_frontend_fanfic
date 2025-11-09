@@ -78,7 +78,8 @@ const fetchUserVersions = async () => {
     console.error('Error fetching versions:', result.error);
     alert('Error fetching versions: ' + result.error);
   } else {
-    userVersions.value = result[0]?.versions || [];
+    // The sync returns { versions: [...] } directly, not wrapped in an array
+    userVersions.value = result.versions || [];
   }
 };
 
@@ -114,21 +115,9 @@ const handleSubmitFic = async () => {
   const newFicId = submitFicResult.ficId;
   alert(`Fic submitted! Fic ID: ${newFicId}`);
 
-  // 2. Automatically trigger categorization for the new fic
-  console.log(`Triggering categorization for new fic: ${newFicId}`);
-  const categorizeResult = await CategorizingAPI.categorizeFic(
-    newFicId,
-    ficText.value, // Pass ficText and authorTags to the categorizing API
-    authorTagsFormatted,
-  );
-
-  if ('error' in categorizeResult) {
-    console.error('Error during automatic categorization:', categorizeResult.error);
-    alert(`Fic submitted, but categorization failed: ${categorizeResult.error}`);
-    // Decide if you want to roll back fic submission or just alert
-  } else {
-    console.log(`Fic categorized successfully! Categorization ID: ${categorizeResult.ficId}`);
-  }
+  // Categorization happens automatically via backend sync, no need to call manually
+  // The SubmitNewFicResponse sync handles: Library.submitNewFic -> Categorizing.categorizeFic -> respond
+  console.log(`Fic categorized automatically via sync`);
 
   // Reset form and refresh list
   ficName.value = '';
@@ -188,23 +177,7 @@ const handleSubmitNewVersion = async (versionTitle: string) => {
 
   alert(`New version submitted! Version ID: ${submitResult.versionId}`);
 
-  // Automatically trigger categorization for the new version
-  // We need to get the fic ID from the version to categorize it
-  const versionResult = await LibraryAPI.getVersion(authStore.userId, versionTitle);
-  if (!('error' in versionResult)) {
-    const version = versionResult[0].version;
-    const latestFic = version.fics[version.fics.length - 1]; // Get the latest fic
-    if (latestFic) {
-      const categorizeResult = await CategorizingAPI.categorizeFic(
-        latestFic._id,
-        form.text,
-        authorTagsFormatted,
-      );
-      if ('error' in categorizeResult) {
-        console.error('Error during automatic categorization:', categorizeResult.error);
-      }
-    }
-  }
+  // Categorization happens automatically via backend sync (SubmitNewVersionResponse)
 
   // Reset form and refresh list
   form.text = '';
@@ -249,7 +222,8 @@ const deleteVersion = async (ficTitle: string) => {
   const versionResult = await LibraryAPI.getVersion(authStore.userId, ficTitle);
   let ficIds: ID[] = [];
   if (!('error' in versionResult)) {
-    ficIds = versionResult[0].version.fics.map(fic => fic._id);
+    // versionResult is now { version: Version }, not an array
+    ficIds = versionResult.version.fics.map((fic: Fic) => fic._id);
   }
 
   const result = await LibraryAPI.deleteVersion(authStore.userId, ficTitle);
@@ -281,15 +255,15 @@ const viewFicDetails = async (ficId: ID, ficTitle: string, versionNumber: number
   const fic = ficResult.fic;
 
   // 2. Fetch categorization details from Categorizing Concept
-  // Note: _viewFicCategory returns an array of FicCategoryDoc, as per API spec
+  // Note: The sync returns { ficCategory: FicCategoryDoc[] }
   const categorizationResult = await CategorizingAPI.viewFicCategory(ficId);
 
   let categorization: FicCategoryDoc | undefined;
   if ('error' in categorizationResult) {
     console.warn(`Categorization data not found for fic ID '${ficId}':`, categorizationResult.error);
     // It's okay if categorization isn't found, we'll just display the fic without it.
-  } else if (Array.isArray(categorizationResult) && categorizationResult.length > 0) {
-    categorization = categorizationResult[0]; // Get the first (and only) result
+  } else if (categorizationResult.ficCategory && categorizationResult.ficCategory.length > 0) {
+    categorization = categorizationResult.ficCategory[0]; // Get the first (and only) result
   }
 
   // Combine and set the details
