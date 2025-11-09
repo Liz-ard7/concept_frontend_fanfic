@@ -36,14 +36,7 @@ const handleDeleteAccount = async () => {
     return;
   }
 
-  // Delete all fics and user from Library
-  const libraryResult = await LibraryAPI.deleteFicsAndUser(authStore.userId);
-  if ('error' in libraryResult) {
-    deleteError.value = 'Error deleting user data: ' + libraryResult.error;
-    return;
-  }
-
-  // Delete user authentication
+  // Delete user authentication - this will cascade to Library and Categorizing via backend syncs
   const authResult = await UserAuthAPI.deleteUser(deleteUsername.value, deletePassword.value);
   if ('error' in authResult) {
     deleteError.value = 'Error deleting user account: ' + authResult.error;
