@@ -31,7 +31,13 @@ Oh this is really cool
 ![Deltarune, Doom, AO3, HGTTG](<Screenshot 2025-10-27 180029.png>)
 
 ## Design Changes
+
 [Design changes](DesignChanges.md)
 
 ## Reflection
+
 [Reflection](Reflection.md)
+
+## Trace
+
+[Trace](Trace.md)

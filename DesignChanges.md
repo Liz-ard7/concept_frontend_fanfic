@@ -2,6 +2,8 @@
 
 ## Original spec from assignment 2
 
+I fear I created this without the use of context, and didn't think to save it with context, so I've just copied and pasted from the backend.
+
 ### Categorizing
 
 **concept** Categorizing [Fic]
@@ -227,7 +229,7 @@ probably be for the best, as both can be done at the same time and it is way sim
 
 ### Changes to concepts
 
-I made queries return arrays of objects, not just objects, in accordance to guidelines for queries.
+1. I made queries return arrays of objects, not just objects, in accordance to guidelines for queries.
 
 ### Changes to design
 
@@ -241,11 +243,11 @@ From the designs, I realized I liked a more sleek feeling to a website, much lik
 
 ## Changes From 4b -> 4c
 
-In making this, originally I wanted to include a list of the most commonly-used tags in all of AO3 in categorizeTags, so even if there was a fandom-specific tag used for specific situations, such as Jason Todd Returns Home to describe fics where Jason Todd is redeemed and goes back to Bruce Wayne's house, the AI would be able to recognize it. At first, this was 1 million tags that I got off of the official website itself. I quickly realized this was far, far too many tags, and whittled it down by deleting tags with less than 100 uses, which left 50,000 tags. 100 felt like a good number-- even in a large fandom, 100 uses of a tag can mark a popular trope. However, even then, it was far too many, and while testing the actions it would cut me off as I was exceeding 4 million tokens a minute, which caused me to remove the list of tags completely, with the promise I would eventually add them back. Now, for the final product, I ended up adding them back, however, I quickly realized the AI would get confused with the addition of so many tokens. It would forget what the original instructions were, and would suggest to remove tags it actually wanted to add. Not only that, it'd also take forever to get a response, to the point where I thought my code bugged out. Thus, I ended up removing even more tags, keeping only tags with above 500 uses, leaving me with 10,000 tags. This seems to be the sweet spot, however, as it drastically improves the suggestions, yet doesn't take too long for the AI to think about, nor does it confuse the AI.
+1. In making this, originally I wanted to include a list of the most commonly-used tags in all of AO3 in categorizeTags, so even if there was a fandom-specific tag used for specific situations, such as Jason Todd Returns Home to describe fics where Jason Todd is redeemed and goes back to Bruce Wayne's house, the AI would be able to recognize it. At first, this was 1 million tags that I got off of the official website itself. I quickly realized this was far, far too many tags, and whittled it down by deleting tags with less than 100 uses, which left 50,000 tags. 100 felt like a good number-- even in a large fandom, 100 uses of a tag can mark a popular trope. However, even then, it was far too many, and while testing the actions it would cut me off as I was exceeding 4 million tokens a minute, which caused me to remove the list of tags completely, with the promise I would eventually add them back. Now, for the final product, I ended up adding them back, however, I quickly realized the AI would get confused with the addition of so many tokens. It would forget what the original instructions were, and would suggest to remove tags it actually wanted to add. Not only that, it'd also take forever to get a response, to the point where I thought my code bugged out. Thus, I ended up removing even more tags, keeping only tags with above 500 uses, leaving me with 10,000 tags. This seems to be the sweet spot, however, as it drastically improves the suggestions, yet doesn't take too long for the AI to think about, nor does it confuse the AI.
 
-I also ended up adding another query to the UserAuthentication concept, the _userExists query, as it would be helpful for users (and syncs) to see if a user exists before making a username. Sort of like "username is already taken, how about username4?", but without the actual suggestion.
+2. I also ended up adding another query to the UserAuthentication concept, the _userExists query, as it would be helpful for users (and syncs) to see if a user exists before making a username. Sort of like "username is already taken, how about username4?", but without the actual suggestion.
 
-I got rid of _findFicsWithDate as I realized it was an extremely unnecessary feature. If I put it in the library UI, a major section of the library would suddenly become dedicated solely to finding Fics with a certain date, which distracts from the main purpose of the page, which is to add Fics and view them. Moreover, finding fics with a certain date is wholely useless, and I cannot imagine it is a common-enough need that there would be a dedicated search bar for it making the UI far more clunky.
+3. I got rid of _findFicsWithDate as I realized it was an extremely unnecessary feature. If I put it in the library UI, a major section of the library would suddenly become dedicated solely to finding Fics with a certain date, which distracts from the main purpose of the page, which is to add Fics and view them. Moreover, finding fics with a certain date is wholely useless, and I cannot imagine it is a common-enough need that there would be a dedicated search bar for it making the UI far more clunky.
 
 
 ## Final Design!
@@ -311,8 +313,6 @@ Type of tags includes: ArchiveWarning, fandom, character, relationship, freeform
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **effect** returns the ficCategory.
 
 ### Library
-
-# concept: Library
 
 **concept** Library [User]
 
@@ -410,8 +410,6 @@ Type of tags includes: ArchiveWarning, fandom, character, relationship, freeform
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; **effect** returns the user's version associated with the versionTitle as title.
 
 ### UserAuthentication
-
-# Concept: UserAuthentication
 
 **concept** UserAuthentication
 
