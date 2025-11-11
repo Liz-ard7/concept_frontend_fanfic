@@ -14,21 +14,27 @@ A new author is confused at the tagging system of AO3, and goes to my website, w
 
 <video controls src="../15c287a0-c42b-45c1-9c29-7eee74f3cd58.mp4" title="Screen Recording 4a"></video>
 
+If it doesn't show up, it's the one that is 15c287a0-c42b-45c1-9c29-7eee74f3cd58.mp4
+
 ### Updated Screen Recording of User Journey 4b
 
 <video controls src="Vite App - Google Chrome 2025-10-27 21-26-27.mp4" title="Updated Screen Recording 4b"></video>
+
+If it doesn't show up, its the one that is Vite App - Google Chrome 2025-10-27 21-26-27.mp4
 
 ### Final Screen Recording 4c
 
 <video controls src="Vite App - Google Chrome 2025-11-10 22-50-37.mp4" title="Final Screen Recording 4c"></video>
 
+If it doesn't show up, it's the one that is Vite App - Google Chrome 2025-11-10 22-50-37.mp4
+
 ## Design Study
 
-![Mort Garson](<Screenshot 2025-10-27 175759.png>)
+![Mort Garson](<my-concept-frontend/Screenshot 2025-10-27 175759.png>)
 
-![Lemon Demon](<Screenshot 2025-10-27 175947.png>)
+![Lemon Demon](<my-concept-frontend/Screenshot 2025-10-27 175947.png>)
 
-![Deltarune, Doom, AO3, HGTTG](<Screenshot 2025-10-27 180029.png>)
+![Deltarune, Doom, AO3, HGTTG](<my-concept-frontend/Screenshot 2025-10-27 180029.png>)
 
 ## Design Changes
 
