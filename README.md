@@ -12,15 +12,15 @@ A new author is confused at the tagging system of AO3, and goes to my website, w
 
 ### Screen Recording of User Journey 4a
 
-<video controls src="../15c287a0-c42b-45c1-9c29-7eee74f3cd58.mp4" title="Screen Recording"></video>
+<video controls src="../15c287a0-c42b-45c1-9c29-7eee74f3cd58.mp4" title="Screen Recording 4a"></video>
 
 ### Updated Screen Recording of User Journey 4b
 
-<video controls src="Vite App - Google Chrome 2025-10-27 21-26-27.mp4" title="Updated Screen Recording"></video>
+<video controls src="Vite App - Google Chrome 2025-10-27 21-26-27.mp4" title="Updated Screen Recording 4b"></video>
 
 ### Final Screen Recording 4c
 
-Oh this is really cool
+<video controls src="Vite App - Google Chrome 2025-11-10 22-50-37.mp4" title="Final Screen Recording 4c"></video>
 
 ## Design Study
 
