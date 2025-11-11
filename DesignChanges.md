@@ -1,5 +1,7 @@
 # Design Changes
 
+Note: When I did design changes, I did them by hand and didn't think to save them to ctx. Instead, I've copied the concepts from previous commits: the first version and the last version.
+
 ## Original spec from assignment 2
 
 I fear I created this without the use of context, and didn't think to save it with context, so I've just copied and pasted from the backend.
